@@ -1,125 +1,148 @@
-# Instagram Following Tracker — Terminal (Ubuntu)
+# Instagram Following Tracker CLI
 
-Ứng dụng Python có menu. **Không cần Playwright, không cần cuộn Brave, không cần mở HTML.** Sử dụng thư viện **instagrapi**, là API **không chính thức**. Không có đảm bảo Instagram sẽ trả về đủ danh sách hoặc luôn cho đăng nhập. Sử dụng cho danh sách Following mà tài khoản của bạn được phép xem.
+Công cụ dòng lệnh viết bằng Python để ghi nhận danh sách **Following** trên Instagram, lưu lịch sử kiểm tra và so sánh thay đổi giữa các lần thu thập dữ liệu.
 
-## 1. Cài đặt trên Ubuntu 25.10
+Ứng dụng chạy trực tiếp trong Terminal, sử dụng SQLite để lưu trữ cục bộ và cung cấp menu tương tác. Không cần trình duyệt hoặc máy chủ web.
 
-Giải nén vào thư mục home, giữ nguyên app cũ:
+> [!IMPORTANT]
+> Dự án sử dụng [`instagrapi`](https://github.com/subzeroid/instagrapi), một thư viện **không chính thức**. Khả năng truy xuất dữ liệu phụ thuộc vào quyền xem của tài khoản đăng nhập và các giới hạn của Instagram. Chỉ sử dụng với dữ liệu mà bạn có quyền truy cập.
+
+## Tính năng
+
+- Thu thập danh sách Following thông qua API có phân trang.
+- Lưu mỗi lần kiểm tra thành một bản ghi (snapshot) có thời gian, trạng thái và danh sách tài khoản.
+- Xem lịch sử, chi tiết từng snapshot và toàn bộ username đã thu thập.
+- So sánh hai snapshot, phát hiện tài khoản xuất hiện thêm hoặc không còn xuất hiện; nhận biết đổi username khi có ID ổn định.
+- Phân biệt dữ liệu **đã xác minh đủ số lượng** với dữ liệu **chưa đầy đủ**, tránh đưa ra kết luận chắc chắn từ kết quả thiếu.
+- Xuất dữ liệu ra JSON, TXT và CSV; tự động sao lưu từng lần kiểm tra.
+- Quản lý phiên đăng nhập cục bộ, đổi tài khoản mục tiêu và thử phương pháp truy xuất dự phòng.
+- Xóa **một** lần kiểm tra theo ID, có xác nhận trước khi thực hiện.
+
+## Yêu cầu hệ thống
+
+- Linux (ưu tiên Ubuntu hoặc các bản phân phối tương thích).
+- Python **3.11 trở lên** và `python3-venv`.
+- Kết nối Internet để kiểm tra dữ liệu mới.
+- Tài khoản Instagram hợp lệ có quyền xem danh sách cần kiểm tra.
+
+## Cài đặt
+
+Sao chép mã nguồn từ repository GitHub vào máy:
 
 ```bash
-cd ~
-unzip -o ~/Downloads/instagram_following_cli.zip
-cd ~/ig_following_cli
+git clone <REPOSITORY_URL>
+cd instagram-following-tracker
+```
+
+> Thay `<REPOSITORY_URL>` bằng URL HTTPS hoặc SSH của repository. Nếu tải mã nguồn dưới dạng ZIP, hãy giải nén rồi mở Terminal trong thư mục chứa `ig_following.py`.
+
+Cài đặt môi trường Python:
+
+```bash
+sudo apt update
 sudo apt install -y python3 python3-venv
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
+```
+
+Khởi chạy:
+
+```bash
+chmod +x run.sh
 ./run.sh
 ```
 
-Nếu bạn đã giải nén từ GUI vào thư mục khác, hãy `cd` đến đúng thư mục `ig_following_cli`.
+Những lần sử dụng tiếp theo chỉ cần chạy `./run.sh` từ thư mục dự án. Không cần cài lại thư viện nếu môi trường `.venv` vẫn còn.
 
-**Không cần cài lại Chromium/Playwright.** Dùng `python3` phiên bản 3.11 trở lên. Script không cần `sudo` khi chạy.
+## Hướng dẫn sử dụng
 
-## 2. Cách dùng menu
+Chương trình cung cấp các lựa chọn sau:
 
-- **1**: Kiểm tra Following (mặc định tài khoản `yu_hjeiiun.n`). Khi lần đầu cần đăng nhập, hãy nhập **username và mật khẩu của chính bạn** trong Terminal. Đây là phiên riêng của thư viện instagrapi, không sử dụng cookie Brave. Không gửi mật khẩu cho người khác. Mật khẩu nhập ẩn và không ghi vào file.
-- **2**: Xem lịch sử ngày giờ các lần kiểm tra. Cột `Follow mới` là `—` khi chưa đủ hai mốc có dữ liệu đáng tin cậy.
-- **3**: Xem kết quả chi tiết lần kiểm tra theo ID, gồm username mới, số tài khoản, ngày giờ.
-- **4**: So sánh hai lần kiểm tra bất kỳ. Nếu một lượt thiếu dữ liệu thì kết quả **chỉ là đối chiếu tham khảo**, không kết luận unfollow.
-- **5**: Xuất toàn bộ lịch sử JSON và CSV, ngoài file sao lưu JSON tự tạo sau **mỗi lượt kiểm tra**.
-- **6**: Nhập các bản ghi từ app web cũ `~/ig_tracker_ubuntu/data/tracker.sqlite3` (không sửa dữ liệu cũ), chống nhập trùng.
-- **7**: Làm mới phiên đăng nhập.
-- **8**: Đổi username tài khoản mục tiêu.
-- **9**: Phương pháp lấy danh sách dự phòng của thư viện (khi API chính không đầy đủ). Không tự hợp nhất hai kết quả thiếu.
-- **0**: Thoát.
+| Menu | Chức năng |
+| --- | --- |
+| `1` | Kiểm tra danh sách Following |
+| `2` | Xem lịch sử các lần kiểm tra |
+| `3` | Xem chi tiết và toàn bộ username của một lần kiểm tra |
+| `4` | So sánh hai lần kiểm tra theo ID |
+| `5` | Xuất toàn bộ lịch sử ra JSON và CSV |
+| `6` | Nhập dữ liệu từ ứng dụng web cũ (nếu có) |
+| `7` | Đăng nhập hoặc làm mới phiên Instagram |
+| `8` | Thay đổi username tài khoản mục tiêu |
+| `9` | Thử phương pháp truy xuất dự phòng |
+| `10` | Xóa một lần kiểm tra theo ID |
+| `0` | Thoát chương trình |
 
-## 3. Hiểu đúng kết quả
+**Thiết lập lần đầu:** Chọn `8` để đặt tài khoản mục tiêu, sau đó chọn `1` để bắt đầu kiểm tra. Khi được yêu cầu, đăng nhập bằng tài khoản Instagram của chính bạn. Mật khẩu được nhập ẩn trong Terminal; ứng dụng không lưu mật khẩu dưới dạng văn bản thuần.
 
-Script đọc các trang API và kiểm tra **hai điều kiện**: (1) phân trang đã kết thúc mà không có lỗi và (2) số username/ID duy nhất bằng `following_count` của tài khoản đích. Khi đủ thì đánh dấu `verified` (tức **khớp số lượng API và hết phân trang**), không phải đảm bảo tuyệt đối server Instagram đúng trong mọi tình huống.
+**Xóa lịch sử:** Menu `10` chỉ xóa một snapshot theo ID sau khi xác nhận. Các bản ghi khác và phiên đăng nhập được giữ nguyên. File xuất tổng hợp được tạo trước đó không tự động cập nhật theo thao tác xóa.
 
-Nếu kiểm tra ngày 01/11 được 147/147 đầy đủ, ngày 02/11 được 148/148 đầy đủ và ID tài khoản tương thích, chương trình sẽ lưu `new_follow_count=1`, username mới và ngày giờ của lượt kiểm tra thứ hai. **Đây là khoảng thời gian phát hiện**, không phải ngày/giờ chính xác người đó bấm Follow. Nếu có nhiều tài khoản mới, không thể xác định họ đã follow theo thứ tự nào.
+## Trạng thái dữ liệu và cách diễn giải
 
-Mốc ảnh cũ 01/11 (146/147 theo dữ liệu đã trích xuất) luôn là `legacy` — không dùng để tự động kết luận follow mới. Chương trình tự nhập lịch sử từ app cũ (nếu có) lần đầu và **không sửa** `~/ig_tracker_ubuntu/data/tracker.sqlite3`.
+| Trạng thái | Ý nghĩa |
+| --- | --- |
+| `verified` | Phân trang kết thúc không lỗi, số tài khoản duy nhất khớp số lượng Instagram trả về và có ID cần thiết. |
+| `partial` | Danh sách thu thập chưa đầy đủ hoặc chưa đáp ứng điều kiện xác minh. |
+| `legacy` | Dữ liệu nhập từ nguồn cũ, chỉ dùng để tham khảo. |
+| `failed` | Lượt kiểm tra không hoàn thành do lỗi. |
 
-Nếu Instagram báo CAPTCHA, `challenge_required`, `429` hay từ chối đăng nhập: **dừng**, không đăng nhập liên tục để cố vượt kiểm tra. Mở Instagram trên Brave/điện thoại và xác minh tài khoản theo hướng dẫn của Instagram. Phiên của thư viện có thể bị chặn ngay cả khi Brave vẫn đăng nhập bình thường.
+Chương trình chỉ tự động xác nhận thay đổi giữa **hai snapshot `verified` tương thích của cùng tài khoản mục tiêu**. Nếu một trong hai snapshot chưa đầy đủ, các chênh lệch chỉ có giá trị tham khảo; username vắng mặt **không chứng minh** tài khoản đó đã bị unfollow.
 
-## 4. Lưu trữ
+Thời điểm ghi nhận snapshot là **thời điểm phát hiện thay đổi**, không phải thời điểm chính xác người dùng thực hiện thao tác Follow hoặc Unfollow. Thứ tự danh sách trả về từ API cũng không thể coi là thứ tự Follow theo thời gian.
 
-- `data/history.sqlite3`: cơ sở dữ liệu các lượt kiểm tra.
-- `data/backups/YYYYMMDD..._check_ID.json`: sao lưu **tự động từng lần** (bao gồm username mới, ngày kiểm tra, tổng Following, trạng thái).
-- `data/backups/*_ALL_HISTORY.json`, `*_SUMMARY.csv`: sao lưu toàn bộ theo yêu cầu menu 5.
-- `data/instagram_session.json`: phiên Instagram có chứa token/cookie nhạy cảm, quyền file chỉ user đọc. **Không gửi file này cho ai, không đưa vào GitHub**.
-- `data/config.json`: chỉ chứa username đăng nhập và username mục tiêu, **không có mật khẩu**.
+Trạng thái `verified` chỉ xác nhận kết quả đáp ứng các điều kiện kiểm tra của ứng dụng, không bảo đảm tuyệt đối rằng dữ liệu do Instagram cung cấp luôn chính xác.
 
-Để sao lưu sang máy khác, đóng chương trình rồi copy toàn bộ `data/`. Để xóa phiên đăng nhập mà giữ lịch sử, xóa riêng `data/instagram_session.json`. Không xóa `data/history.sqlite3`.
+## Lưu trữ dữ liệu
 
-## 5. Chạy lần sau
+Dữ liệu được lưu cục bộ trong thư mục `data/` (được tạo khi chạy):
 
-```bash
-cd ~/ig_following_cli
-./run.sh
+```text
+instagram-following-tracker/
+├── ig_following.py
+├── run.sh
+├── requirements.txt
+├── README.md
+├── tests/
+└── data/                     # Dữ liệu cục bộ; không đưa lên Git
+    ├── config.json           # Cấu hình tài khoản
+    ├── instagram_session.json # Phiên đăng nhập nhạy cảm
+    ├── history.sqlite3       # Cơ sở dữ liệu lịch sử
+    └── backups/              # JSON, TXT, CSV xuất và sao lưu
 ```
 
-Nếu bạn gặp lỗi, gửi **tên lỗi và nội dung Terminal sau khi đã che thông tin cá nhân**. Không gửi mật khẩu, session file, cookie hoặc token.
+Mỗi lần kiểm tra tạo bản sao lưu JSON và TXT tương ứng. Có thể xuất CSV từ màn hình chi tiết hoặc xuất lịch sử tổng hợp từ menu `5`.
 
-## 6. Lưu ý giới hạn
+Để sao lưu dữ liệu sang máy khác, hãy thoát chương trình rồi sao chép thư mục `data/` qua kênh an toàn. Không công khai thư mục này hoặc file phiên đăng nhập.
 
-Meta không công khai API hỗ trợ truy xuất toàn bộ Following của tài khoản khác. `instagrapi` là thư viện bên thứ ba; tài khoản có thể bị giới hạn hoặc challenge. Việc lấy danh sách 147/147 phải được xác nhận từ máy của bạn, chưa được kiểm thử với tài khoản thực trong quá trình xây dựng file này.
+## Bảo mật và quyền riêng tư
 
-Tài liệu thư viện: https://subzeroid.github.io/instagrapi/latest/usage-guide/user/
+- **Không commit** `data/`, `.venv/`, file session, cookie, token, bản xuất Following hoặc bản sao lưu cá nhân lên GitHub.
+- Kiểm tra `git status` và `git diff --cached --name-only` trước khi commit.
+- Không chia sẻ file `data/instagram_session.json` hoặc thông tin xác thực.
+- Nếu Instagram yêu cầu CAPTCHA, checkpoint hoặc báo giới hạn truy cập, hãy dừng thử lại liên tục và xử lý yêu cầu xác minh qua ứng dụng/trang Instagram chính thức.
+- Dự án không phải sản phẩm chính thức của Instagram hoặc Meta.
 
-## 7. Bổ sung — Xem TOÀN BỘ Following trong một lần kiểm tra
+## Kiểm thử
 
-Tại menu chọn **3**, nhập ID lần kiểm tra, chẳng hạn **4**. Script sẽ tự in **toàn bộ 146 username đã thu thập** cùng ID Instagram (nếu có), không còn phải nhập `y` để hiện danh sách. Thứ tự hiển thị là thứ tự nhận dữ liệu từ API, **không phải thứ tự follow theo thời gian**.
-
-Mỗi lần kiểm tra tự động tạo **hai bản sao lưu**: file JSON chứa thời gian, trạng thái, số follow mới và username mới được xác minh (nếu có); và file TXT chứa toàn bộ username của lượt đó. Trong menu 3, có thể xuất thêm CSV nếu muốn mở danh sách trong Excel/LibreOffice.
-
-**Quan trọng với lượt #4:** 146/147 là bản ghi `partial`; danh sách 146 username là dữ liệu thực tế đã lấy được, nhưng không thể khẳng định 1 tài khoản chưa xuất hiện là unfollow. Lượt kiểm tra đủ số lượng đầu tiên tạo mốc đáng tin cậy; kể từ khi có **hai** bản ghi `verified` cùng tài khoản, script mới xác nhận follow mới bằng ID và lưu chúng trong lịch sử.
-
-### Cập nhật từ bản cũ (không xóa lịch sử và phiên đăng nhập)
-
-Dừng script ở menu bằng `0`, sao lưu dữ liệu, rồi giải nén gói nâng cấp vào thư mục home:
+Chạy các bài kiểm thử có trong dự án:
 
 ```bash
-cp -a ~/ig_following_cli/data ~/ig_following_cli_data_backup
-unzip -o ~/Downloads/instagram_following_cli_v2.zip -d ~
-cd ~/ig_following_cli
-./run.sh
+python3 -m unittest discover -s tests -v
 ```
 
-Không cần đăng nhập lại nếu phiên Instagram đã lưu còn hiệu lực. Không xoá thư mục `data/`.
+Các bài kiểm thử cục bộ không thay thế cho việc kiểm tra khả năng truy cập API Instagram trong môi trường thực tế.
 
-## 8. CLI V4 — Chỉ xóa một lượt kiểm tra
+## Giới hạn
 
-Chọn **10** trong menu, nhập một ID đã hiển thị ở menu 2, gõ `XOA <ID>` để xác nhận. **Không có lựa chọn xóa toàn bộ lịch sử**. Script chỉ xóa đúng một lượt thuộc tài khoản mục tiêu, đồng thời tính lại kết quả so sánh của các mốc đã xác minh còn lại. Mặc định giữ file sao lưu riêng, muốn xóa file đó thì gõ `y` khi được hỏi. File `ALL_HISTORY` xuất thủ công từ trước không bị tự động xóa, có thể còn chứa lượt đã xóa.
+- API không chính thức có thể thay đổi, bị giới hạn tốc độ hoặc không trả về đầy đủ dữ liệu.
+- Không thể xác định chính xác thời điểm hoặc thứ tự Follow từ danh sách thu thập.
+- Kết quả phụ thuộc vào quyền truy cập và trạng thái phiên đăng nhập.
+- Công cụ không thực hiện Follow hoặc Unfollow tài khoản.
 
-## 9. Dọn ứng dụng web cũ và các file thử nghiệm (KHÔNG ảnh hưởng CLI)
+## Tài liệu tham khảo
 
-Trước hết hãy đóng máy chủ web cũ nếu còn chạy (`Ctrl+C` trong Terminal chạy `app.py`) và gỡ extension **Following Tracker - Local Bridge** tại `brave://extensions` → Remove. Các extension của trình duyệt không thể được gỡ bằng cách chỉ xóa folder mã nguồn.
+- [instagrapi — GitHub](https://github.com/subzeroid/instagrapi)
+- [instagrapi — Usage Guide](https://subzeroid.github.io/instagrapi/latest/usage-guide/user/)
 
-Dọn các file thử nghiệm HTML/JS, các ZIP thử nghiệm trong Downloads và thư mục web `~/ig_tracker_ubuntu` (bao gồm `.venv`, `brave_extension`, dữ liệu web cũ) bằng script đi kèm. Script chỉ dùng **gio trash** (chuyển vào Thùng rác), không xóa vĩnh viễn. Xem trước:
+---
 
-```bash
-cd ~/ig_following_cli
-./cleanup_old_artifacts.sh
-```
-
-Sau khi đọc danh sách và xác nhận các tệp thuộc bản cũ, chạy:
-
-```bash
-./cleanup_old_artifacts.sh --apply
-```
-
-Nó hỏi xác nhận riêng cho từng nhóm. Các file chẩn đoán JSON và bản backup web cũ được **giữ mặc định**, chỉ chuyển vào Thùng rác nếu bạn chủ động chọn. **Không đụng** `~/ig_following_cli`, `.venv`, `data`, `~/ig_following_cli_data_backup*`, ZIP V4 mới, ảnh chụp hay file Instagram export cá nhân.
-
-## 10. Nâng cấp lên CLI V4
-
-```bash
-# Thoát CLI bằng menu 0 rồi sao lưu
-cp -a ~/ig_following_cli/data ~/ig_following_cli_data_backup_before_v4
-unzip -o ~/Downloads/instagram_following_cli_v4.zip -d ~
-cd ~/ig_following_cli
-./run.sh
-```
-
-Giữ phiên đăng nhập và lịch sử cũ. Không phải cài lại `instagrapi`.
+**Lưu ý:** Dự án phục vụ mục đích quản lý dữ liệu và học tập. Người sử dụng chịu trách nhiệm tuân thủ quy định của Instagram và pháp luật áp dụng.
