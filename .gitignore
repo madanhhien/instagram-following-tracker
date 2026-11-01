@@ -1,0 +1,25 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Instagram authentication
+*session*.json
+*cookie*.json
+.env
+.env.*
+
+# Private tracking data
+data/
+*.sqlite
+*.sqlite3
+*.db
+
+# Backups
+backups/
+*.zip
+
+# System
+.DS_Store
+seed_*.json
