@@ -1,0 +1,23 @@
+# Python environments / build artifacts
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local authentication / settings and private data
+.env
+.env.*
+*session*.json
+*cookie*.json
+*token*.json
+data/
+*.sqlite
+*.sqlite3
+*.db
+backups/
+seed_*.json
+
+# Archives, system files
+*.zip
+.DS_Store

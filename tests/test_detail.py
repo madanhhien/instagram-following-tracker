@@ -20,14 +20,15 @@ class DetailTest(unittest.TestCase):
         t.DB_FILE=t.DATA/'history.sqlite3'
         t.SESSION=t.DATA/'session.json'
         t.CONFIG=t.DATA/'config.json'
+        t.save_config({'target':'target','login':''})
     def tearDown(self):
         t.DATA,t.BACKUPS,t.DB_FILE,t.SESSION,t.CONFIG=self.original
         self.temp.cleanup()
     def test_partial_snapshot_shows_all_usernames_and_auto_txt(self):
-        row, backup=t.save_snapshot(t.DEFAULT_TARGET,target_pk='123',expected=4,
+        row, backup=t.save_snapshot('target',target_pk='123',expected=4,
             people=[{'pk':'11','username':'first.test'}, {'pk':'22','username':'second.test'},
                     {'pk':'33','username':'third.test'}],status='partial',checked_at='2026-11-01T12:42:38+07:00')
-        txt=t.BACKUPS / f'20261101124238_{t.DEFAULT_TARGET}_check_{row["id"]}_following.txt'
+        txt=t.BACKUPS / f'20261101124238_{'target'}_check_{row["id"]}_following.txt'
         self.assertTrue(txt.exists())
         content=txt.read_text(encoding='utf-8')
         self.assertIn('first.test',content)
@@ -45,7 +46,7 @@ class DetailTest(unittest.TestCase):
         self.assertIn('CHƯA THỂ KẾT LUẬN',display)
         self.assertIn('BẢN GHI CHƯA ĐẦY ĐỦ',display)
     def test_csv_export_contains_all_and_header(self):
-        row,_=t.save_snapshot(t.DEFAULT_TARGET,target_pk='123',expected=2,
+        row,_=t.save_snapshot('target',target_pk='123',expected=2,
             people=[{'pk':'11','username':'alpha'},{'pk':'22','username':'beta'}],status='verified')
         csv_path=t.export_username_file(row,'csv')
         content=csv_path.read_text(encoding='utf-8-sig')
